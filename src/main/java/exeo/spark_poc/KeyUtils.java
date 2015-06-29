@@ -12,15 +12,30 @@ public class KeyUtils {
 		
 		return generateKeyFor(idMayorista.toString());
 	}
+	
+	public static String generateKey(Recarga recarga) {
+		if(recarga == null)
+			return "null";
+		
+		return generateKeyFor(recarga);
+	}
 
 	public static String generateKeyFor(String string) {
 		if(string == null)
 			return "null";
 		
-		String format = DateFormatUtils.format(new Date(), "yyyyMMdd");
+		String format = DateFormatUtils.format(new Date(), "yyyyMMdd:HH");
+		
+		StringBuilder key = new StringBuilder("rol:")
+			.append(format).append(":").append(string);
+		return key.toString();
+	}
+	
+	private static String generateKeyFor(Recarga recarga) {
+		String format = DateFormatUtils.format(recarga.getFechaTransTp(), "yyyyMMdd:HH");
 		
 		StringBuilder key = new StringBuilder(format)
-			.append(":").append(string);
+			.append(":").append(recarga.getIdMayorista());
 		return key.toString();
 	}
 

@@ -299,5 +299,32 @@ public class Recarga implements Serializable{
 				.append("monto", this.montoRecarga)
 				.append("fechaRecarga", this.fechaTransTp).toString();
 	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if(obj == null)
+			return false;
+		
+		if(obj == this)
+			return true;
+		
+		if(obj.getClass() != this.getClass())
+			return false;
+		
+		Recarga recarga = (Recarga)obj;
+		if(recarga.getIdMayorista() == null || this.getIdMayorista() == null)
+			return false;
+		
+		return this.getIdMayorista().equals(recarga.getIdMayorista());
+	}
+	
+	@Override
+	public int hashCode() {
+		final int prime = 17;
+		int hash = (this.idMayorista == null) ? 0 : this.idMayorista.hashCode();
+		
+		hash = prime * 97 + hash;
+		return hash;
+	}
 
 }

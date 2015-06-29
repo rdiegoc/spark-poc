@@ -1,5 +1,6 @@
 package exeo.spark_poc;
 
+import java.text.DateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,7 +18,7 @@ import scala.collection.mutable.StringBuilder;
 
 public class KafkaClient {
 	
-	private static Map<Long, Triple<Long, Double, Long>> byMayorista = new HashMap<Long, Triple<Long, Double, Long>>(); 
+	private static Map<Long, Triple<Long, Double, Date>> byMayorista = new HashMap<Long, Triple<Long, Double, Date>>(); 
 	
 	public static void main(String[] args) {
 		Properties props = new Properties();
@@ -40,7 +41,7 @@ public class KafkaClient {
 			producer.send(data);
 			
 			try {
-				Thread.sleep(100);
+				Thread.sleep(1000);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -55,26 +56,26 @@ public class KafkaClient {
 	private static String createJson() {
 		long idMayorista = RandomUtils.nextLong(1, 5);
 		double monto = RandomUtils.nextDouble(1, 200);
-		long fechaRecarga = new Date().getTime();
+		Date fechaRecarga = new Date();
 		
 		if(byMayorista.containsKey(idMayorista)) {
-			Triple<Long, Double, Long> triple = byMayorista.get(idMayorista);
+			Triple<Long, Double, Date> triple = byMayorista.get(idMayorista);
 			
 			long cantAcum = (Long)triple.getLeft();
 			double montoAcum = (Double)triple.getMiddle();
-			long maxFechaAcum = (Long)triple.getRight();
+			Date maxFechaAcum = (Date)triple.getRight();
 			
-			triple = new ImmutableTriple<Long, Double, Long>(++cantAcum, montoAcum + monto, (fechaRecarga > maxFechaAcum ? fechaRecarga : maxFechaAcum));
+			triple = new ImmutableTriple<Long, Double, Date>(++cantAcum, montoAcum + monto, (fechaRecarga.after(maxFechaAcum) ? fechaRecarga : maxFechaAcum));
 			byMayorista.put(idMayorista, triple);
 		} else  {
-			Triple<Long, Double, Long> triple = new ImmutableTriple<Long, Double, Long>(1L, monto, fechaRecarga);
+			Triple<Long, Double, Date> triple = new ImmutableTriple<Long, Double, Date>(1L, monto, fechaRecarga);
 			byMayorista.put(idMayorista, triple);
 		}
 		
 		return new StringBuilder("{\"idMayorista\" : \"")
 			.append(idMayorista).append("\",\"fechaTransTp\" : \"")
-			.append(fechaRecarga).append("\",\"montoRecarga\" : \"")
-			.append(monto).append("\"}")
+			.append(DateFormat.getDateTimeInstance().format(fechaRecarga)).append("\",\"montoRecarga\" : ")
+			.append(monto).append("}")
 			.toString();
 	}
 
