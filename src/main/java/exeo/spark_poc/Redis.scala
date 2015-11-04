@@ -1,16 +1,17 @@
 package exeo.spark_poc
 
+import org.apache.spark.rdd.RDD
+
 import redis.clients.jedis.Jedis
 import redis.clients.jedis.JedisPool
 import redis.clients.jedis.JedisPoolConfig
-import org.apache.spark.rdd.RDD
 
 /**
  * @author DIEGO
  */
 object Redis {
   
-  var redisPool : JedisPool = null;
+  private var redisPool : JedisPool = null;
   
   def savePartition[K, V] (partitionOfRecords : Iterator[(K, V)], callback: (Jedis, (K, V)) => Unit) = {
     if(!partitionOfRecords.isEmpty) {
@@ -35,23 +36,31 @@ object Redis {
     }
   }
   
-  def getPool() : JedisPool = synchronized {
+  def hSet(key : String, hash : String, value : Any) = {
+    val redis = getConnection()
+        
+    redis.hset(key, hash, value.toString())
+    
+    closeConnection(redis)
+  }
+  
+  private def getPool() : JedisPool = synchronized {
     if(redisPool == null) {
       val poolConfig = new JedisPoolConfig();
-      poolConfig.setMaxTotal(100);
-      poolConfig.setMinIdle(30000);
+      poolConfig.setMaxTotal(Config.Redis.Pool.max);
+      poolConfig.setMinIdle(Config.Redis.Pool.minIdle);
       
-      redisPool = new JedisPool(poolConfig, "192.168.56.10", 6379);
+      redisPool = new JedisPool(poolConfig, Config.Redis.host, Config.Redis.port);
     }
     
     redisPool;
   }
   
-  def getConnection() : Jedis = {
+  private def getConnection() : Jedis = {
     getPool().getResource
   }
   
-  def closeConnection(redis : Jedis) = {
+  private def closeConnection(redis : Jedis) = {
     if(redis != null)
       redis.close()
   }
